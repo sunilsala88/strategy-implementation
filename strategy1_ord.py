@@ -19,13 +19,13 @@ start_hour,start_min=19,1
 #end time
 end_hour,end_min=19,55
 
-list_of_tickers=['BTC', 'ETH'] 
+list_of_tickers=['MMM', 'AXP'] 
                 #  'AMGN', 'AMZN', 'AAPL', 'BA', 'CAT', 'CVX', 'CSCO', 'KO', 'DIS', 'DOW', 'GS', 'HD', 'HON', 'IBM', 'INTC', 'JNJ', 'JPM', 'MCD', 'MRK', 'MSFT', 'NKE', 'PG', 'CRM', 'TRV', 'UNH', 'VZ', 'V', 'WMT']
 
 
 contract_object={}
 for ticker in list_of_tickers:
-    c=ib.qualifyContracts(Crypto(ticker,'PAXOS', 'USD'))[0]
+    c=ib.qualifyContracts(Stock(ticker,'SMART', 'USD'))[0]
     print(c)
     contract_object[ticker]=c
 print(contract_object)
