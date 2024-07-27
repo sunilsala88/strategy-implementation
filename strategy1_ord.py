@@ -17,7 +17,7 @@ quantity_=1
 #start time
 start_hour,start_min=19,1
 #end time
-end_hour,end_min=19,30
+end_hour,end_min=19,55
 
 list_of_tickers=['BTC', 'ETH'] 
                 #  'AMGN', 'AMZN', 'AAPL', 'BA', 'CAT', 'CVX', 'CSCO', 'KO', 'DIS', 'DOW', 'GS', 'HD', 'HON', 'IBM', 'INTC', 'JNJ', 'JPM', 'MCD', 'MRK', 'MSFT', 'NKE', 'PG', 'CRM', 'TRV', 'UNH', 'VZ', 'V', 'WMT']
@@ -76,6 +76,89 @@ def get_level(hist_df):
 # print(hl,ll)
 
 
+def trade_sell_stocks(stock_name,high_level): #closing_price, quantitys=1  ????
+    #market order
+    global current_balance
+    #market order
+    contract = contract_object[stock_name]
+    # ord=MarketOrder(action='SELL',totalQuantity=1,AccountValue=account_no)
+    ord=Order(orderId=ib.client.getReqId(),orderType='MKT',totalQuantity=quantity_,action='SELL',account=account_no,tif=ord_validity)
+    trade=ib.placeOrder(contract,ord)
+    ib.sleep(1)
+    logging.info(trade)
+    logging.info('Placed market sell order')
+
+    #stop order
+    order = Order()
+    order.orderId = ib.client.getReqId()
+    order.action = 'BUY'
+    order.orderType = "STP"
+    order.totalQuantity = quantity_
+    order.auxPrice = int(high_level)
+    order.tif = ord_validity
+    order.account=account_no
+
+    trade=ib.placeOrder(contract,order)
+    ib.sleep(1)
+    logging.info(trade)
+    logging.info("placed stop order")
+    
+
+
+
+def trade_buy_stocks(stock_name,low_level):
+
+    global current_balance
+    #market order
+    contract = contract_object[stock_name]
+    # ord=MarketOrder(action='BUY',totalQuantity=1)
+    ord=Order(orderId=ib.client.getReqId(),orderType='MKT',totalQuantity=quantity_,action='BUY',account=account_no,tif=ord_validity)
+    trade=ib.placeOrder(contract,ord)
+    ib.sleep(1)
+    logging.info(trade)
+    logging.info('Placed market buy order')
+
+
+    #stop order
+    order = Order()
+    order.orderId = ib.client.getReqId()
+    order.action = 'SELL'
+    order.orderType = "STP"
+    order.totalQuantity = quantity_
+    order.auxPrice = int(low_level)
+    order.tif = ord_validity
+    order.account=account_no
+
+    trade=ib.placeOrder(contract,order)
+    ib.sleep(1)
+    logging.info(trade)
+    logging.info("placed stop order")
+
+
+def strategy(data,ticker,high_level,low_level):
+    logging.info('inside strategy')
+    print(ticker)
+    print(data)
+    
+    buy_condition=data['close'].iloc[-1]>high_level
+    # buy_condition=True
+    sell_condition=data['close'].iloc[-1]<low_level
+    # sell_condition=True
+    current_balance=int(float([v for v in ib.accountValues(account=account_no) if v.tag == 'AvailableFunds' ][0].value))
+
+    if current_balance>data.close.iloc[-1]:
+        if buy_condition:
+            logging.info('buy condiiton satisfied')
+            trade_buy_stocks(ticker,data.close.iloc[-1])
+        elif sell_condition:
+            logging.info('sell condition satisfied')
+            trade_sell_stocks(ticker,data.close.iloc[-1])
+        else :
+            logging.info('no condition satisfied')
+    else:
+        logging.info('we dont have enough money')
+        logging.info('current balance is',current_balance,'stock price is ',data['close'].iloc[-1])
+
 
 def main_strategy_code():
 
@@ -115,64 +198,20 @@ def main_strategy_code():
         print(quantity)
         logging.info('Checking condition')
 
-        # if quantity==0:
-        #     logging.info('we dont have enough money so we cannot trade')
-        #     continue
+        if quantity==0:
+            logging.info('we dont have enough money so we cannot trade')
+            continue
 
-        # if pos_df.empty:
-        #     print('we dont have any position')
-        #     logging.info('we dont have any position')
-        #     strategy(hist_df,ticker)
-
-
-        # elif len(pos_df)!=0 and ticker not in pos_df['name'].tolist():
-        #     logging.info('we have some position but current ticker is not in position')
-        #     print('we have some position but current ticker is not in position')
-        #     strategy(hist_df,ticker)
-
-        # elif len(pos_df)!=0 and ticker in pos_df["name"].tolist():
-        #     logging.info('we have some position and current ticker is in position')
-        #     print('we have some position and current ticker is in position')
-            
-        #     if pos_df[pos_df["name"]==ticker]["position"].values[0] == 0:
-        #         logging.info('we have current ticker in position but quantity is 0')
-        #         print('we have current ticker in position but quantity is 0')
-        #         strategy(hist_df,ticker)
-
-        #     elif pos_df[pos_df["name"]==ticker]["position"].values[0] > 0  :
-        #         logging.info('we have current ticker in position and is long')
-        #         print('we have current ticker in position and is long')
-        #         sell_condition=hist_df['sma1'].iloc[-1]<hist_df['sma2'].iloc[-1] and hist_df['sma1'].iloc[-2]>hist_df['sma2'].iloc[-2]
-        #         # sell_condition=True
-        #         # current_balance=int(float([v for v in ib.accountValues(account=account_no) if v.tag == 'AvailableFunds' ][0].value))
-        #         # if current_balance>hist_df.close.iloc[-1]:
-        #         if sell_condition:
-        #                     print('sell condition satisfied')
-        #                     logging.info('sell condition satisfied')
-        #                     # close_ticker_open_orders(ticker)
-        #                     close_ticker_postion(ticker)
-        #                     trade_sell_stocks(ticker,hist_df.close.iloc[-1])
-                        
-                            
-            
+        if pos_df.empty:
+            print('we dont have any position')
+            logging.info('we dont have any position')
+            strategy(hist_df,ticker,high_level,low_level)
 
 
-        #     elif pos_df[pos_df["name"]==ticker]["position"].values[0] < 0 :
-        #         print('we have current ticker in position and is short')
-        #         logging.info('we have current ticker in position and is short')
-        #         buy_condition=hist_df['sma1'].iloc[-1]>hist_df['sma2'].iloc[-1] and hist_df['sma1'].iloc[-2]<hist_df['sma2'].iloc[-2]
-        #         # buy_condition=True
-        #         # current_balance=int(float([v for v in ib.accountValues(account=account_no) if v.tag == 'AvailableFunds' ][0].value))
-        #         # if current_balance>hist_df.close.iloc[-1]:
-         
-        #         if buy_condition:
-        #                     print('buy condiiton satisfied')
-        #                     logging.info('buy condiiton satisfied')
-        #                     # close_ticker_open_orders(ticker)
-        #                     close_ticker_postion(ticker)
-                        
-        #                     trade_buy_stocks(ticker,hist_df.close.iloc[-1])
-       
+        elif len(pos_df)!=0 and ticker not in pos_df['name'].tolist():
+            logging.info('we have some position but current ticker is not in position')
+            print('we have some position but current ticker is not in position')
+            strategy(hist_df,ticker,high_level,low_level)
 
 
 
@@ -213,3 +252,55 @@ while datetime.datetime.now()<end_time:
 logging.info('Stragegy ended')
 print(datetime.datetime.now())
 print('Strategy ended')
+
+
+
+
+
+#closing all open orders
+def close_all_orders():
+    logging.info('closing all open orders')
+    
+    orders = ib.openOrders()
+    print(orders)
+    for order in orders:
+        logging.info(order)
+        a=ib.cancelOrder(order)
+        logging.info(a)
+    return 1
+      
+#closing all the open positions
+def close_all_position():
+    positions = ib.positions(account=account_no) # A list of positions, according to IB
+    logging.info(positions)
+    print('inside closing position')
+    for position in positions:
+        logging.info(position)
+        print(position)
+        n = position.contract.symbol
+        # contract = position.contract
+        contract=ib.qualifyContracts(Contract(conId=position.contract.conId))[0]
+        print(contract)
+        # c=ib.qualifyContracts(contract)[0]
+        if position.position > 0: # Number of active Long positions
+            action = 'SELL' # to offset the long positions
+        elif position.position < 0: # Number of active Short positions
+            action = 'BUY' # to offset the short positions
+        totalQuantity = abs(position.position)
+        logging.info(f'Flatten Position: {contract} {totalQuantity} {action}')
+        # ord = MarketOrder(action=action, totalQuantity=totalQuantity)
+        ord=Order(orderId=ib.client.getReqId(),orderType='MKT',totalQuantity=quantity_,action=action,account=account_no,tif=ord_validity)
+        trade = ib.placeOrder(contract, ord)
+        logging.info(trade)
+
+    return 1
+
+
+ 
+close_all_orders()
+close_all_position()
+ib.disconnect()
+
+
+
+
