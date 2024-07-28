@@ -1,0 +1,39 @@
+2024-07-28 19:35:53,499 - Connecting to 127.0.0.1:7497 with clientId 77...
+2024-07-28 19:35:53,500 - Connected
+2024-07-28 19:35:53,505 - Logged on to server version 176
+2024-07-28 19:35:53,508 - API connection ready
+2024-07-28 19:35:53,509 - Warning 2104, reqId -1: Market data farm connection is OK:uscrypto
+2024-07-28 19:35:53,509 - Warning 2104, reqId -1: Market data farm connection is OK:usfarm.nj
+2024-07-28 19:35:53,509 - Warning 2104, reqId -1: Market data farm connection is OK:hfarm
+2024-07-28 19:35:53,509 - Warning 2104, reqId -1: Market data farm connection is OK:usfuture
+2024-07-28 19:35:53,509 - Warning 2104, reqId -1: Market data farm connection is OK:cashfarm
+2024-07-28 19:35:53,509 - Warning 2104, reqId -1: Market data farm connection is OK:usfarm
+2024-07-28 19:35:53,509 - Warning 2106, reqId -1: HMDS data farm connection is OK:hkhmds
+2024-07-28 19:35:53,509 - Warning 2106, reqId -1: HMDS data farm connection is OK:ushmds
+2024-07-28 19:35:53,509 - Warning 2158, reqId -1: Sec-def data farm connection is OK:secdefhk
+2024-07-28 19:35:53,512 - position: Position(account='DU8663685', contract=Stock(conId=76792991, symbol='TSLA', exchange='NASDAQ', currency='USD', localSymbol='TSLA', tradingClass='NMS'), position=100.0, avgCost=185.66)
+2024-07-28 19:35:53,512 - position: Position(account='DU8663688', contract=Crypto(conId=495759171, symbol='ETH', currency='USD', localSymbol='ETH.USD', tradingClass='ETH'), position=0.0, avgCost=0.0)
+2024-07-28 19:35:53,512 - position: Position(account='DU8663689', contract=Stock(conId=265598, symbol='AAPL', exchange='NASDAQ', currency='USD', localSymbol='AAPL', tradingClass='NMS'), position=-1.0, avgCost=225.0436)
+2024-07-28 19:35:53,512 - position: Position(account='DU8663688', contract=Stock(conId=3691937, symbol='AMZN', exchange='NASDAQ', currency='USD', localSymbol='AMZN', tradingClass='NMS'), position=0.0, avgCost=0.0)
+2024-07-28 19:35:53,512 - position: Position(account='DU8663688', contract=Stock(conId=208813719, symbol='GOOGL', exchange='NASDAQ', currency='USD', localSymbol='GOOGL', tradingClass='NMS'), position=-2.0, avgCost=165.68519999999998)
+2024-07-28 19:35:53,512 - position: Position(account='DU8663685', contract=Crypto(conId=479624278, symbol='BTC', currency='USD', localSymbol='BTC.USD', tradingClass='BTC'), position=0.00385866, avgCost=52345.73660286213)
+2024-07-28 19:35:54,532 - execDetails Execution(execId='00012dbb.66a5cf34.01.01', time=datetime.datetime(2024, 7, 28, 13, 30, 9, tzinfo=datetime.timezone.utc), acctNumber='DU8663688', exchange='PAXOS', side='BOT', shares=1.0, price=3267.7, permId=1777973442, clientId=0, orderId=0, liquidation=0, cumQty=1.0, avgPrice=3267.7, orderRef='', evRule='', evMultiplier=0.0, modelCode='', lastLiquidity=1)
+2024-07-28 19:35:54,533 - execDetails Execution(execId='00012dbb.66a5cf35.01.01', time=datetime.datetime(2024, 7, 28, 13, 30, 57, tzinfo=datetime.timezone.utc), acctNumber='DU8663688', exchange='PAXOS', side='SLD', shares=1.0, price=3268.35, permId=1777973448, clientId=0, orderId=0, liquidation=0, cumQty=1.0, avgPrice=3268.35, orderRef='ActivityMonitor', evRule='', evMultiplier=0.0, modelCode='', lastLiquidity=1)
+2024-07-28 19:35:54,533 - commissionReport: CommissionReport(execId='00012dbb.66a5cf34.01.01', commission=5.88186, currency='USD', realizedPNL=0.0, yield_=0.0, yieldRedemptionDate=0)
+2024-07-28 19:35:54,533 - commissionReport: CommissionReport(execId='00012dbb.66a5cf35.01.01', commission=5.88303, currency='USD', realizedPNL=-11.11489, yield_=0.0, yieldRedemptionDate=0)
+2024-07-28 19:35:54,533 - Synchronization complete
+2024-07-28 19:35:55,357 - Strategy started
+2024-07-28 19:35:55,357 - Checking if start time has been reached
+2024-07-28 19:35:55,357 - Starting the main code
+2024-07-28 19:35:55,357 - Starting the main code with candle size60
+2024-07-28 19:35:55,456 - Fetched order_df and position_df
+2024-07-28 19:35:55,456 - MMM
+2024-07-28 19:35:55,456 - fetching historical data
+2024-07-28 19:35:56,278 - calculated indicators
+2024-07-28 19:35:56,284 - fetching historical data
+2024-07-28 19:35:56,745 - calculated indicators
+2024-07-28 19:35:56,789 - AXP
+2024-07-28 19:35:56,789 - fetching historical data
+2024-07-28 19:35:58,271 - calculated indicators
+2024-07-28 19:35:58,277 - fetching historical data
+2024-07-28 19:35:58,765 - calculated indicators
