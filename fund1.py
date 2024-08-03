@@ -39,7 +39,7 @@ df_issues = pd.DataFrame(issues_data)
 
 # # Display the DataFrame
 # import ace_tools as tools; tools.display_dataframe_to_user(name="Issues DataFrame", dataframe=df_issues)
-# print(df_issues)
+print(df_issues)
 
 
 import xml.etree.ElementTree as ET
