@@ -7,34 +7,77 @@ import pandas as pd
 import pandas_ta as ta
 
 import logging
-logging.basicConfig(level=logging.INFO, filename=f'orb_{datetime.date.today()}',filemode='w',format="%(asctime)s - %(message)s")
+logging.basicConfig(level=logging.INFO, filename=f'open_range_{datetime.date.today()}',filemode='w',format="%(asctime)s - %(message)s")
 
 ib = IB()
 ib.connect('127.0.0.1', 7497, clientId=18)
 
+
+try:
+    order_filled_dataframe=pd.read_csv('order_filled_list.csv')
+    order_filled_dataframe.set_index('time',inplace=True)
+
+except:
+    column_names = ['time','ticker','price','action']
+    order_filled_dataframe = pd.DataFrame(columns=column_names)
+    order_filled_dataframe.set_index('time',inplace=True)
+
+
+
+
+
+
+# tickers=["COALINDIA","CIPLA","BRITANNIA","BPCL","BAJAJFINS",
+# "BAJAJ-AUT","AXISBANK","ASIANPAIN","ADANIPORT"]
+# tickers = ["WIPRO","ULTRACEMC","UPL","TITAN","TATASTEEL"]
+# ,
+
+# "TATAMOTOR","TCS","SUNPHARMA","SBIN","SHREECEM","RELIANCE","POWERGRID",
+# "ONGC","NESTLEIND","NTPC"
+
+# ,"MARUTI","KOTAKBANK","JSWSTEEL","INFY",
+# "INDUSINDB",
+# "IOC","ITC","ICICIBANK","HDFCBANK","HINDUNILV","HINDALCO",
+# "HEROMOTOC","HCLTECH","GRASIM","GAIL","EICHERMOT","DRREDDY",
+# "COALINDIA","CIPLA","BRITANNIA","BPCL","BAJAJFINS",
+# "BAJAJ-AUT","AXISBANK","ASIANPAIN","ADANIPORT"]
+
+
+tickers = ['GOOG']
+exchange='SMART'
+currency='USD'
 account_no='DU8663688'
+
 ord_validity='DAY'
 quantity_=1
 #start time
-start_hour,start_min=19,1
+start_hour,start_min=0,8
 #end time
-end_hour,end_min=19,55
-
-list_of_tickers=['MMM', 'AXP'] 
-                #  'AMGN', 'AMZN', 'AAPL', 'BA', 'CAT', 'CVX', 'CSCO', 'KO', 'DIS', 'DOW', 'GS', 'HD', 'HON', 'IBM', 'INTC', 'JNJ', 'JPM', 'MCD', 'MRK', 'MSFT', 'NKE', 'PG', 'CRM', 'TRV', 'UNH', 'VZ', 'V', 'WMT']
+end_hour,end_min=0,29
 
 
-contract_object={}
-for ticker in list_of_tickers:
-    c=ib.qualifyContracts(Stock(ticker,'SMART', 'USD'))[0]
+
+contract_objects={}
+for ticker in tickers:
+    c=ib.qualifyContracts(Stock(ticker,exchange, currency))[0]
     print(c)
-    contract_object[ticker]=c
-print(contract_object)
+    contract_objects[ticker]=c
+print(contract_objects)
 
 
-#first hour
-#previus day high low
-#cpr top_cpr bottom cpr
+
+def order_open_handler(order):
+    global order_filled_dataframe
+    if order.orderStatus.status=='Filled':
+        print('order filled')
+        logging.info('order filled')
+        name=order.contract.localSymbol
+        a=[name,order.orderStatus.avgFillPrice,order.order.action]
+        # if name not in order_filled_dataframe.ticker.to_list():
+        order_filled_dataframe.loc[order.fills[0].execution.time] = a
+        order_filled_dataframe.to_csv('order_filled_list.csv')
+        message=order.contract.localSymbol+" "+order.order.action+"  "+str(order.orderStatus.avgFillPrice)
+        logging.info(message)
 
 def calculate_cpr(high, low, close):
     pivot = (high + low + close) / 3
@@ -55,10 +98,11 @@ def get_historical_data(ticker_contract):
     logging.info('calculated indicators')
     
     return df
+
 def get_level(hist_df):
     ct=datetime.datetime.now()
-    start_range=datetime.datetime(ct.year, ct.month, ct.day-1, 9, 0)
-    end_range=datetime.datetime(ct.year, ct.month, ct.day-1, 10, 0)
+    start_range=datetime.datetime(ct.year, ct.month, ct.day, 19, 0)
+    end_range=datetime.datetime(ct.year, ct.month, ct.day, 20, 0)
     
     print(hist_df)
     hist_df['date']=hist_df['date'].dt.tz_localize(None)
@@ -76,61 +120,99 @@ def get_level(hist_df):
 # hl,ll=get_level('BTC')
 # print(hl,ll)
 
+def check_market_order_placed(name):
+    ord=ib.reqAllOpenOrders()
 
-def trade_sell_stocks(stock_name,high_level): #closing_price, quantitys=1  ????
+    if ord:
+        ord_df=pd.DataFrame(ord)
+        print(ord_df)
+        print(type(ord_df))
+        # ord_df.to_csv('order_list.csv')
+        ord_df['name']=[c['localSymbol'] for c in list(ord_df['contract'])]
+        ord_df['ord_type']=[c['orderType']for c in list(ord_df['order'])]
+        a=ord_df[(ord_df['name']==name) & (ord_df['ord_type']=='MKT') ]
+        print(a)
+        if a.empty:
+            return True
+
+        else:
+            return False
+    else:
+        return True
+
+
+
+def trade_sell_stocks(stock_name,stock_price,stop_price): #closing_price, quantitys=1  ????
+
+
     #market order
     global current_balance
     #market order
-    contract = contract_object[stock_name]
+    contract = contract_objects[stock_name]
     # ord=MarketOrder(action='SELL',totalQuantity=1,AccountValue=account_no)
-    ord=Order(orderId=ib.client.getReqId(),orderType='MKT',totalQuantity=quantity_,action='SELL',account=account_no,tif=ord_validity)
-    trade=ib.placeOrder(contract,ord)
-    ib.sleep(1)
-    logging.info(trade)
-    logging.info('Placed market sell order')
+    if check_market_order_placed(stock_name):
+       
+        ord=Order(orderId=ib.client.getReqId(),orderType='MKT',totalQuantity=quantity_,action='SELL',account=account_no,tif=ord_validity)
+        trade=ib.placeOrder(contract,ord)
+        ib.sleep(1)
+        logging.info(trade)
+        logging.info('Placed market sell order')
 
-    #stop order
+    else:
+        logging.info('market order already placed')
+        print('market order already placed')
+        return 0
+
+
+
+    # trailing order
     order = Order()
     order.orderId = ib.client.getReqId()
-    order.action = 'BUY'
-    order.orderType = "STP"
-    order.totalQuantity = quantity_
-    order.auxPrice = int(high_level)
-    order.tif = ord_validity
     order.account=account_no
-
-    trade=ib.placeOrder(contract,order)
+    order.action = 'BUY'
+    order.orderType = "TRAIL"
+    order.totalQuantity = quantity_
+    order.auxPrice = 3
+    order.trailStopPrice = int(stop_price)
+    order.tif = ord_validity
+    trade=ib.placeOrder(contract, order)
     ib.sleep(1)
     logging.info(trade)
     logging.info("placed stop order")
-    
 
 
 
-def trade_buy_stocks(stock_name,low_level):
+def trade_buy_stocks(stock_name,stock_price,stop_price):
 
-    global current_balance
+
     #market order
-    contract = contract_object[stock_name]
+    contract = contract_objects[stock_name]
     # ord=MarketOrder(action='BUY',totalQuantity=1)
-    ord=Order(orderId=ib.client.getReqId(),orderType='MKT',totalQuantity=quantity_,action='BUY',account=account_no,tif=ord_validity)
-    trade=ib.placeOrder(contract,ord)
-    ib.sleep(1)
-    logging.info(trade)
-    logging.info('Placed market buy order')
+    if check_market_order_placed(stock_name):
+        ord=Order(orderId=ib.client.getReqId(),orderType='MKT',totalQuantity=quantity_,action='BUY',account=account_no,tif=ord_validity)
+        trade=ib.placeOrder(contract,ord)
+        ib.sleep(1)
+        logging.info(trade)
+        logging.info('Placed market buy order')
+
+    else:
+        logging.info('market order already placed')
+        print('market order already placed')
+        return 0        
 
 
-    #stop order
+
+    # trailing order
     order = Order()
     order.orderId = ib.client.getReqId()
-    order.action = 'SELL'
-    order.orderType = "STP"
-    order.totalQuantity = quantity_
-    order.auxPrice = int(low_level)
-    order.tif = ord_validity
     order.account=account_no
-
-    trade=ib.placeOrder(contract,order)
+    order.action = 'SELL'
+    order.orderType = "TRAIL"
+    order.totalQuantity = quantity_
+    order.auxPrice = 3
+    order.trailStopPrice = int(stop_price)
+    order.tif = ord_validity
+    trade=ib.placeOrder(contract, order)
     ib.sleep(1)
     logging.info(trade)
     logging.info("placed stop order")
@@ -142,7 +224,7 @@ def strategy(data,ticker,high_level,low_level):
     print(data)
     
     buy_condition=data['close'].iloc[-1]>high_level
-    # buy_condition=True
+    buy_condition=True
     sell_condition=data['close'].iloc[-1]<low_level
     # sell_condition=True
     current_balance=int(float([v for v in ib.accountValues(account=account_no) if v.tag == 'AvailableFunds' ][0].value))
@@ -150,10 +232,10 @@ def strategy(data,ticker,high_level,low_level):
     if current_balance>data.close.iloc[-1]:
         if buy_condition:
             logging.info('buy condiiton satisfied')
-            trade_buy_stocks(ticker,data.close.iloc[-1])
+            trade_buy_stocks(ticker,data.close.iloc[-1],low_level)
         elif sell_condition:
             logging.info('sell condition satisfied')
-            trade_sell_stocks(ticker,data.close.iloc[-1])
+            trade_sell_stocks(ticker,data.close.iloc[-1],high_level)
         else :
             logging.info('no condition satisfied')
     else:
@@ -182,17 +264,19 @@ def main_strategy_code():
     print(ord_df)
     logging.info('Fetched order_df and position_df')
 
-    for ticker in list_of_tickers:
+    for ticker in tickers:
         logging.info(ticker)
         print('ticker name is',ticker,'################')
-        ticker_contract=contract_object[ticker]
+        ticker_contract=contract_objects[ticker]
         hist_df=get_historical_data(ticker_contract)
         high_level,low_level=get_level(hist_df)
         print(high_level, low_level)
         logging.info(f"{high_level} {low_level}")
 
-        print(hist_df)
+
+        print(hist_df.tail(50))
         print(hist_df.close.iloc[-1])
+        # ib.sleep(200)
         capital=int(float([v for v in ib.accountValues(account=account_no) if v.tag == 'AvailableFunds' ][0].value))
         print(capital)
         quantity=int((capital/10)/hist_df.close.iloc[-1])  
@@ -236,8 +320,12 @@ while start_time>datetime.datetime.now():
 logging.info('Starting the main code')
 
 candle_size=60
+ib.newOrderEvent += order_open_handler
+ib.orderStatusEvent += order_open_handler
+ib.cancelOrderEvent += order_open_handler
 
 logging.info('Starting the main code with candle size'+str(candle_size))
+
 while datetime.datetime.now()<end_time:
     main_strategy_code()
     now = datetime.datetime.now()
