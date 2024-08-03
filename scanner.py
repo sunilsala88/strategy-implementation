@@ -7,7 +7,7 @@ ib.connect('127.0.0.1', 7497, clientId=17)
 sub = ScannerSubscription(
     instrument='STOCK.HK', 
     locationCode='STK.HK.NSE', 
-    scanCode='TOP_VOLUME_RATE')
+    scanCode='TOP_PERC_GAIN')
 
 scanData = ib.reqScannerData(sub)
 
@@ -46,13 +46,13 @@ print(df)
 # print(locationCodes)
 
 
-cont=ib.qualifyContracts(Stock('RELIANCE','NSE','INR'))[0]
-print(cont)
-d=ib.reqFundamentalData(cont,reportType='ReportSnapshot')
-print(d)
+# cont=ib.qualifyContracts(Stock('RELIANCE','NSE','INR'))[0]
+# print(cont)
+# d=ib.reqFundamentalData(cont,reportType='ReportSnapshot')
+# print(d)
 
 
-path = 'data.xml'
-with open(path, 'w') as f:
-    f.write(d)
+# path = 'data.xml'
+# with open(path, 'w') as f:
+#     f.write(d)
 
